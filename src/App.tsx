@@ -7,6 +7,19 @@ import Header from './components/Header';
 
 const STORAGE_KEY = 'justisia_chat_history';
 
+// Fallback UUID generator for non-HTTPS contexts
+const generateId = (): string => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  // Fallback for HTTP contexts
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
 // Helper to serialize/deserialize messages with Date objects
 const saveMessages = (messages: Message[]) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
@@ -38,7 +51,7 @@ export function App() {
   const handleSend = async (content: string) => {
     // Add user message
     const userMessage: Message = {
-      id: crypto.randomUUID(),
+      id: generateId(),
       content,
       role: 'user',
       timestamp: new Date(),
@@ -51,7 +64,7 @@ export function App() {
       const response = await sendChatMessage(content);
 
       const botMessage: Message = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         content: response.answer,
         role: 'assistant',
         timestamp: new Date(),
@@ -61,7 +74,7 @@ export function App() {
     } catch (error) {
       console.error('Failed to get response:', error);
       const errorMessage: Message = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         content: 'Maaf, server tidak dapat dihubungi',
         role: 'assistant',
         timestamp: new Date(),
