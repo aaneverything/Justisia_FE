@@ -36,7 +36,20 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(message.content);
+      // Try modern clipboard API first (HTTPS only)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(message.content);
+      } else {
+        // Fallback for HTTP contexts
+        const textarea = document.createElement('textarea');
+        textarea.value = message.content;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
