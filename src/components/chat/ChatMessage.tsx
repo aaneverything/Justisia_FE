@@ -1,46 +1,21 @@
 import { useState } from 'react';
-import { Scale, User, ChevronDown, ChevronUp, FileText, Copy, Check } from 'lucide-react';
-import type { Message, LegalContext } from '@/types';
+import { Scale, User, Copy, Check } from 'lucide-react';
+import type { Message } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface ChatMessageProps {
   message: Message;
 }
 
-// Format UU code to readable name
-const formatUUCode = (code: string): string => {
-  return code.replace(/_/g, ' ').replace(/(\d+)$/, ' $1');
-};
-
-// Component to display a single legal source
-const SourceCard = ({ context, index }: { context: LegalContext; index: number }) => (
-  <div className="bg-background/50 rounded-lg p-3 border border-border/50">
-    <div className="flex items-start gap-2">
-      <span className="bg-primary/20 text-primary text-xs font-medium px-1.5 py-0.5 rounded shrink-0">
-        [{index + 1}]
-      </span>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-foreground">{context.citation}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{formatUUCode(context.uu_code)}</p>
-        <p className="text-xs text-muted-foreground/80 mt-2 line-clamp-3">{context.content}</p>
-      </div>
-    </div>
-  </div>
-);
-
 const ChatMessage = ({ message }: ChatMessageProps) => {
   const isUser = message.role === 'user';
-  const [showSources, setShowSources] = useState(false);
   const [copied, setCopied] = useState(false);
-  const hasContexts = message.contexts && message.contexts.length > 0;
 
   const handleCopy = async () => {
     try {
-      // Try modern clipboard API first (HTTPS only)
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(message.content);
       } else {
-        // Fallback for HTTP contexts
         const textarea = document.createElement('textarea');
         textarea.value = message.content;
         textarea.style.position = 'fixed';
@@ -89,17 +64,15 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
       >
         <p className="whitespace-pre-wrap">{message.content}</p>
 
-        {/* Action buttons row */}
+        {/* Copy button */}
         <div className="flex items-center gap-2 mt-2">
-          {/* Copy button */}
           <button
             onClick={handleCopy}
             className={cn(
               'flex items-center gap-1 text-xs transition-all',
               isUser
                 ? 'text-primary-foreground/70 hover:text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-              'opacity-0 group-hover:opacity-100'
+                : 'text-muted-foreground hover:text-foreground'
             )}
             title="Salin pesan"
           >
@@ -115,32 +88,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
               </>
             )}
           </button>
-
-          {/* Sources toggle button */}
-          {hasContexts && (
-            <button
-              onClick={() => setShowSources(!showSources)}
-              className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors"
-            >
-              <FileText className="h-3 w-3" />
-              <span>{message.contexts!.length} Sumber</span>
-              {showSources ? (
-                <ChevronUp className="h-3 w-3" />
-              ) : (
-                <ChevronDown className="h-3 w-3" />
-              )}
-            </button>
-          )}
         </div>
-
-        {/* Sources panel */}
-        {hasContexts && showSources && (
-          <div className="mt-3 space-y-2">
-            {message.contexts!.map((context, index) => (
-              <SourceCard key={index} context={context} index={index} />
-            ))}
-          </div>
-        )}
 
         <span
           className={cn(
